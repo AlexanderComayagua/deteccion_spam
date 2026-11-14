@@ -46,15 +46,6 @@ if modelo is None:
 # Ejemplos rápidos para probar
 st.subheader("✉️ Ingresa el contenido del correo o mensaje")
 
-ejemplos = {
-    "Seleccionar un ejemplo...": "",
-    "Ejemplo Spam (Premio / Urgente)": "CONGRATULATIONS! You have won a FREE £1000 cash prize! Claim now by calling 08000930705 or reply WIN to 87575.",
-    "Ejemplo Legítimo (Reunión / Trabajo)": "Hi team, just a reminder that our project meeting is tomorrow at 10am in the main conference room. Let me know if you need anything."
-}
-
-seleccion = st.selectbox("Probar con un mensaje de ejemplo:", list(ejemplos.keys()))
-texto_inicial = ejemplos[seleccion]
-
 mensaje_usuario = st.text_area(
     "Texto del mensaje (preferiblemente en inglés, idioma de entrenamiento):",
     value=texto_inicial,

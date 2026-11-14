@@ -48,7 +48,6 @@ st.subheader("✉️ Ingresa el contenido del correo o mensaje")
 
 mensaje_usuario = st.text_area(
     "Texto del mensaje (preferiblemente en inglés, idioma de entrenamiento):",
-    value=texto_inicial,
     height=150,
     placeholder="Escribe o pega aquí el contenido del correo electrónico..."
 )

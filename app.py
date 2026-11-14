@@ -34,7 +34,7 @@ modelo, metadata = cargar_recursos()
 st.title("🛡️ Detector de Correos Spam")
 st.markdown(
     "Clasificación de mensajes mediante **Procesamiento de Lenguaje Natural (Bag of Words)** "
-    "y un **Árbol de Decisión**. Hecho por Angel Zavala y Cristopher Flores
+    "y un **Árbol de Decisión**. Hecho por Angel Zavala y Cristopher Flores"
 )
 
 # Verificar que el modelo exista

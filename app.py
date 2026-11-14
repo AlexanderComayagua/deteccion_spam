@@ -1,0 +1,122 @@
+import streamlit as st
+import joblib
+import json
+import os
+import re
+
+# Configuración de la página
+st.set_page_config(
+    page_title="Detector de Spam | Árbol de Decisión",
+    page_icon="🛡️",
+    layout="centered"
+)
+
+# Cargar metadatos y modelo
+@st.cache_resource
+def cargar_recursos():
+    ruta_modelo = "modelo_spam_arbol.pkl"
+    ruta_meta = "model_metadata.json"
+    
+    modelo = None
+    metadata = {}
+    
+    if os.path.exists(ruta_modelo):
+        modelo = joblib.load(ruta_modelo)
+    if os.path.exists(ruta_meta):
+        with open(ruta_meta, "r", encoding="utf-8") as f:
+            metadata = json.load(f)
+            
+    return modelo, metadata
+
+modelo, metadata = cargar_recursos()
+
+# Encabezado principal
+st.title("🛡️ Detector de Correos Spam")
+st.markdown(
+    "Clasificación de mensajes mediante **Procesamiento de Lenguaje Natural (Bag of Words)** "
+    "y un **Árbol de Decisión**."
+)
+
+# Panel lateral con información del modelo
+with st.sidebar:
+    st.header("📊 Detalles del Modelo")
+    if metadata:
+        st.write(f"**Algoritmo:** {metadata.get('model_type', 'DecisionTreeClassifier')}")
+        st.write(f"**Vectorizador:** {metadata.get('vectorizer', 'CountVectorizer (3000 features)')}")
+        st.write(f"**Profundidad máxima:** {metadata.get('max_depth', 'N/A')}")
+        st.write(f"**Versión Scikit-Learn:** {metadata.get('sklearn_version', '1.6.1')}")
+        
+        metricas = metadata.get("metrics", {})
+        if metricas:
+            st.divider()
+            st.subheader("Métricas de Evaluación")
+            col_m1, col_m2 = st.columns(2)
+            col_m1.metric("Accuracy", f"{metricas.get('accuracy', 0)*100:.2f}%")
+            col_m2.metric("F1-Score", f"{metricas.get('f1_score', 0):.4f}")
+            col_m1.metric("Precision", f"{metricas.get('precision', 0)*100:.2f}%")
+            col_m2.metric("Recall", f"{metricas.get('recall', 0)*100:.2f}%")
+    else:
+        st.info("No se encontró el archivo model_metadata.json.")
+
+# Verificar que el modelo exista
+if modelo is None:
+    st.error("⚠️ No se encontró el archivo `modelo_spam_arbol.pkl` en el directorio raíz.")
+    st.stop()
+
+# Ejemplos rápidos para probar
+st.subheader("✉️ Ingresa el contenido del correo o mensaje")
+
+ejemplos = {
+    "Seleccionar un ejemplo...": "",
+    "Ejemplo Spam (Premio / Urgente)": "CONGRATULATIONS! You have won a FREE £1000 cash prize! Claim now by calling 08000930705 or reply WIN to 87575.",
+    "Ejemplo Legítimo (Reunión / Trabajo)": "Hi team, just a reminder that our project meeting is tomorrow at 10am in the main conference room. Let me know if you need anything."
+}
+
+seleccion = st.selectbox("Probar con un mensaje de ejemplo:", list(ejemplos.keys()))
+texto_inicial = ejemplos[seleccion]
+
+mensaje_usuario = st.text_area(
+    "Texto del mensaje (preferiblemente en inglés, idioma de entrenamiento):",
+    value=texto_inicial,
+    height=150,
+    placeholder="Escribe o pega aquí el contenido del correo electrónico..."
+)
+
+if st.button("🔍 Analizar Mensaje", type="primary", use_container_width=True):
+    if not mensaje_usuario.strip():
+        st.warning("Por favor, ingresa un texto antes de analizar.")
+    else:
+        # Predicción y probabilidades
+        prediccion = modelo.predict([mensaje_usuario])[0]
+        probabilidades = modelo.predict_proba([mensaje_usuario])[0]
+        
+        prob_ham = probabilidades[0] * 100
+        prob_spam = probabilidades[1] * 100
+        
+        st.divider()
+        
+        if prediccion == 1:
+            st.error("🚨 **RESULTADO: POSIBLE SPAM DETECTADO**")
+            st.write(f"El modelo clasifica este mensaje como **Spam** con una confianza del **{prob_spam:.2f}%**.")
+        else:
+            st.success("✅ **RESULTADO: MENSAJE LEGÍTIMO (HAM)**")
+            st.write(f"El modelo clasifica este mensaje como **Legítimo** con una confianza del **{prob_ham:.2f}%**.")
+        
+        # Desglose de probabilidades
+        col1, col2 = st.columns(2)
+        col1.metric("Probabilidad Legítimo (Ham)", f"{prob_ham:.2f}%")
+        col2.metric("Probabilidad Spam", f"{prob_spam:.2f}%")
+        
+        # Palabras detectadas en el vocabulario del modelo
+        vectorizer = modelo.named_steps.get("vectorizer")
+        if vectorizer:
+            analyzer = vectorizer.build_analyzer()
+            tokens = analyzer(mensaje_usuario)
+            vocab = vectorizer.vocabulary_
+            palabras_conocidas = sorted(list(set([t for t in tokens if t in vocab])))
+            
+            with st.expander("🔎 Ver palabras clave reconocidas por el vocabulario del modelo"):
+                if palabras_conocidas:
+                    st.write(", ".join([f"`{p}`" for p in palabras_conocidas]))
+                else:
+                    st.caption("Ninguna palabra del mensaje coincide con las 3,000 palabras principales del vocabulario.")

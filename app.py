@@ -35,28 +35,8 @@ st.title("🛡️ Detector de Correos Spam")
 st.markdown(
     "Clasificación de mensajes mediante **Procesamiento de Lenguaje Natural (Bag of Words)** "
     "y un **Árbol de Decisión**."
+    "Hecho por Cristpher Flores y Angel Zavala"
 )
-
-# Panel lateral con información del modelo
-with st.sidebar:
-    st.header("📊 Detalles del Modelo")
-    if metadata:
-        st.write(f"**Algoritmo:** {metadata.get('model_type', 'DecisionTreeClassifier')}")
-        st.write(f"**Vectorizador:** {metadata.get('vectorizer', 'CountVectorizer (3000 features)')}")
-        st.write(f"**Profundidad máxima:** {metadata.get('max_depth', 'N/A')}")
-        st.write(f"**Versión Scikit-Learn:** {metadata.get('sklearn_version', '1.6.1')}")
-        
-        metricas = metadata.get("metrics", {})
-        if metricas:
-            st.divider()
-            st.subheader("Métricas de Evaluación")
-            col_m1, col_m2 = st.columns(2)
-            col_m1.metric("Accuracy", f"{metricas.get('accuracy', 0)*100:.2f}%")
-            col_m2.metric("F1-Score", f"{metricas.get('f1_score', 0):.4f}")
-            col_m1.metric("Precision", f"{metricas.get('precision', 0)*100:.2f}%")
-            col_m2.metric("Recall", f"{metricas.get('recall', 0)*100:.2f}%")
-    else:
-        st.info("No se encontró el archivo model_metadata.json.")
 
 # Verificar que el modelo exista
 if modelo is None:
